@@ -1,0 +1,13 @@
+node_modules/
+.next/
+out/
+build/
+.env.local
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+npm-debug.log*
+scripts/__pycache__/
+# Local Claude settings may embed tokens in the permission allowlist
+.claude/settings.local.json
