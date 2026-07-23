@@ -5,11 +5,26 @@ pets for playdates, walks and companionship through location-based swipe matchin
 then chat once it's mutual. Built mobile-first for Accra (and beyond).
 
 This repo is the **MVP (P0)** of the [PRD](docs/01-PRD.md): a working core loop on a
-Supabase backend with a Next.js PWA front end.
+Supabase backend, with a **Flutter mobile app** (`mobile/` — the primary client per the
+PRD) and a **Next.js PWA** (repo root — secondary web surface) sharing that one backend.
 
 > **Status:** core loop live and verified end-to-end (auth → pet profile → discovery →
-> swipe → match → chat → report/block). Breeding verification, premium/MoMo, vet portal
-> and native apps are deferred per the PRD roadmap.
+> swipe → match → chat → report/block). Breeding verification, premium/MoMo and the vet
+> portal are deferred per the PRD roadmap.
+
+## Clients
+
+| Client | Location | Stack |
+|---|---|---|
+| **Mobile** (primary) | [`apps/mobile/`](apps/mobile/) | Flutter 3.44 → **iOS + Android** (one codebase), `supabase_flutter` |
+| **Web** (secondary) | [`apps/web/`](apps/web/) | Next.js 14 App Router PWA + `@supabase/ssr` |
+
+The mobile app is platform-adaptive (Cupertino transitions on iOS, Material on Android)
+and responsive across phone/tablet sizes. iOS builds require a Mac/Xcode; everything else
+(Dart, UI, Supabase, geocoding) is shared and identical across both targets.
+
+Both talk to the **same Supabase project** and the same RPCs — location privacy, matching,
+and RLS are enforced server-side, so no client can weaken them.
 
 ---
 
@@ -48,20 +63,39 @@ Key RPCs (`supabase/migrations/0002…`): `discovery_deck`, `record_swipe`,
 ## Project layout
 
 ```
-app/                     Next.js routes (login, onboarding, (main)/*, chat/*)
-components/              SwipeDeck, PetForm, ChatRoom, BottomNav
-lib/                     supabase clients (browser/server), shared types
-middleware.ts            auth session + route protection
-supabase/migrations/     0001 schema · 0002 matching+discovery · 0003 RLS · 0004 storage · 0005 realtime
+apps/
+  mobile/                ═ Flutter app (iOS + Android) ═
+    ios/ android/ web/   platform targets
+    lib/
+      core/              config, theme, api, geo (geocoding)
+      models.dart        shared models/enums
+      features/          auth, onboarding, pets, discovery, matches, chat, profile, shell, splash
+      main.dart          Supabase init + go_router (auth guard) + responsive shell
+  web/                   ═ Next.js web ═ (app/, components/, lib/, middleware.ts)
+supabase/migrations/     0001 schema · 0002 discovery · 0003 RLS · 0004 storage · 0005 realtime · 0006 ranker · 0007 regional
 scripts/                 apply_sql.py (run a migration), seed_and_test.py (e2e check + demo seed)
 docs/                    PRD, directory-structure, SDLC
 ```
 
-## Running locally
+## Running the mobile app (Flutter)
 
-Requires Node 18+ and a Supabase project.
+Requires Flutter 3.44+ and an Android emulator or device.
 
 ```bash
+cd apps/mobile
+flutter pub get
+flutter run                  # picks iOS or Android; anon key is baked in (RLS-protected)
+```
+
+The public anon key ships in the app by design (RLS protects the data). Override per
+environment with `--dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...`.
+
+## Running the web app (Next.js)
+
+Requires Node 18+.
+
+```bash
+cd apps/web
 npm install
 cp .env.example .env.local   # fill in NEXT_PUBLIC_SUPABASE_URL + ANON key
 npm run dev                  # http://localhost:3000

@@ -80,13 +80,13 @@ export default function LoginPage() {
           <form onSubmit={verify} className="stack">
             <div className="notice">Code sent to {email}. Check your inbox.</div>
             <div>
-              <label htmlFor="code">6-digit code</label>
+              <label htmlFor="code">Login code</label>
               <input
                 id="code"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                placeholder="123456"
-                maxLength={6}
+                placeholder="Code from your email"
+                maxLength={10}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 required

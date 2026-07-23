@@ -108,8 +108,9 @@ if isinstance(deck, list) and deck:
 s, others = req("GET", "/rest/v1/owners?select=id,location", t_tok)
 ok(isinstance(others, list) and len(others) <= 1, f"RLS: tester can only see own owner row (saw {len(others) if isinstance(others,list) else others})")
 
-# pick a seed pet, like it; then have that seed pet like back -> match
-target = deck[0]
+# pick a seed pet (so the reciprocal-match leg always runs), like it; then match
+seed_names = {st[2] for st in seed_tokens}
+target = next((c for c in deck if c["name"] in seed_names), deck[0])
 target_pet_id = target["pet_id"]
 # find that seed's token
 seed = next((st for st in seed_tokens if st[2] == target["name"]), None)
